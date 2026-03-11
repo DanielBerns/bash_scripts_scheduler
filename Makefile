@@ -3,9 +3,10 @@
 # Variables
 DEST_DIR = ~/Commands
 SCRIPT = ./scripts/scheduler.py
+ASSETS_DIR = ./assets
 CONFIG = schedule.yaml
 LOG_FILE = schedule.log
-ASSETS_DIR = ./assets
+DUMMY_TASK_SH = dummy_task.sh
 
 .PHONY: help sync clear status logs init
 
@@ -24,10 +25,10 @@ init:
 	@echo "Creating $(DEST_DIR) if it does not exist..."
 	mkdir -p $(DEST_DIR)
 	@echo "Copying assets from $(ASSETS_DIR)..."
-	cp $(ASSETS_DIR)/dummy_task.sh $(DEST_DIR)/
-	cp $(ASSETS_DIR)/{CONFIG} $(DEST_DIR)/
+	cp $(ASSETS_DIR)/$(DUMMY_TASK_SH) $(DEST_DIR)/
+	cp $(ASSETS_DIR)/$(CONFIG) $(DEST_DIR)/
 	@echo "Setting execution permissions for the dummy script..."
-	chmod +x $(DEST_DIR)/dummy_task.sh
+	chmod +x $(DEST_DIR)/$(DUMMY_TASK_SH)
 	@echo "Initialization complete. You can now run 'make sync' from $(DEST_DIR)."
 
 sync:
@@ -40,4 +41,4 @@ status:
 	uv run $(SCRIPT) status
 
 logs:
-	tail -f ${DEST_DIR}$(LOG_FILE)
+	tail -f ${DEST_DIR}/$(LOG_FILE)
