@@ -1,12 +1,11 @@
 import sys
 import os
-from datetime import datetime
 from pathlib import Path
 import yaml
 from crontab import CronTab
 
 # The identifier used to mark jobs managed by this tool in the crontab
-CRON_COMMENT = "managed_by_yaml_scheduler"
+CRON_COMMENT = "yaml_scheduler"
 
 def load_config(config_path: Path) -> dict:
     """Loads and parses the YAML configuration file."""
@@ -31,22 +30,6 @@ def validate_script(base_dir: Path, script_name: str) -> Path:
         print(f"Error: Bash script '{script_path}' is not executable. Run 'chmod +x {script_path}'")
         sys.exit(1)
     return script_path
-
-def backup_crontab(backups_path: Path) -> Path:
-    """Saves a raw text backup of the entire user crontab."""
-    cron = CronTab(user=True)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-    # Ensure backup directory exists
-    backups_path.mkdir(parents=True, exist_ok=True)
-
-    backup_file = backups_path / f"crontab_{timestamp}.bak"
-    content = cron.render()
-    with open(backup_file, 'w') as f:
-        f.write(content)
-
-    print(f"Full crontab safely backed up to: {backup_file}")
-    return backup_file
 
 def clear_jobs():
     """Removes all cron jobs managed by this script."""
@@ -88,9 +71,6 @@ def sync_jobs(config_path: Path):
     # Access user crontab
     cron = CronTab(user=True)
 
-    # --- SAFETY FIRST: Backup before modification ---
-    backup_crontab(base_dir)
-
     # Idempotency: clear existing managed jobs before adding new ones
     cron.remove_all(comment=CRON_COMMENT)
 
@@ -129,4 +109,5 @@ def sync_jobs(config_path: Path):
         success_count += 1
 
     cron.write()
-    print(f"Successfully synced {success_count} managed job(s) to crontab.")
+    print(f"Successfully synced {success_count} job(s) to crontab.")
+

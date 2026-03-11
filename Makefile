@@ -2,6 +2,7 @@
 
 # Variables
 DEST_DIR = ~/Commands
+CRONTABS_BACKUPS = $(DEST_DIR)/crontab_backups
 SCRIPT = ./scripts/scheduler.py
 ASSETS_DIR = ./assets
 CONFIG = schedule.yaml
@@ -16,6 +17,7 @@ help:
 	@echo ""
 	@echo "Targets:"
 	@echo "  init      Create $(DEST_DIR), copy dummy_script.sh and $(CONFIG) from ASSETS_DIR"
+	@echo "  backup    Manually backup the entire current crontab to $(CRONTABS_BACKUPS)
 	@echo "  sync      Apply the jobs defined in $(DEST_DIR)/$(CONFIG) to crontab"
 	@echo "  clear     Remove all managed jobs from crontab"
 	@echo "  status    List all currently managed jobs in crontab"
@@ -30,6 +32,9 @@ init:
 	@echo "Setting execution permissions for the dummy script..."
 	chmod +x $(DEST_DIR)/$(DUMMY_TASK_SH)
 	@echo "Initialization complete. You can now run 'make sync' from $(DEST_DIR)."
+
+backup:
+	uv run $(SCRIPT) backup --dir $(CRONTABS_BACKUPS)
 
 sync:
 	uv run $(SCRIPT) sync

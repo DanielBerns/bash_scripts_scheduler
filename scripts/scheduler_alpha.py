@@ -1,6 +1,6 @@
 import argparse
 from pathlib import Path
-from bash_scripts_scheduler.core import sync_jobs, clear_jobs, status_jobs, backup_crontab
+from bash_scripts_scheduler.core import sync_jobs, clear_jobs, status_jobs
 
 def main():
     parser = argparse.ArgumentParser(
@@ -19,22 +19,13 @@ def main():
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # Sync command
-    subparsers.add_parser("sync", help="Backup crontab, read YAML, and apply jobs")
+    subparsers.add_parser("sync", help="Read the YAML and apply jobs to crontab")
 
     # Clear command
     subparsers.add_parser("clear", help="Remove all managed jobs from crontab")
 
     # Status command
     subparsers.add_parser("status", help="List all currently managed jobs in crontab")
-
-    # Backup command
-    backup_parser = subparsers.add_parser("backup", help="Manually backup the entire current crontab")
-    backup_parser.add_argument(
-        "-d", "--dir",
-        type=str,
-        default="~/Commands/crontab_backups",
-        help="Directory to store the backup (default: ~/Commands/crontab_backups)"
-    )
 
     args = parser.parse_args()
     config_path = Path(args.config).expanduser()
@@ -45,9 +36,6 @@ def main():
         clear_jobs()
     elif args.command == "status":
         status_jobs()
-    elif args.command == "backup":
-        backup_dir = Path(args.dir).expanduser()
-        backup_crontab(backup_dir)
 
 if __name__ == "__main__":
     main()

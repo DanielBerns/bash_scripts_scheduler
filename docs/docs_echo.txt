@@ -1,3 +1,15 @@
+That makes perfect sense. Backing up the entire crontab before applying automated changes is an excellent safety practice.
+
+Since your crontab might contain unrelated jobs (like system maintenance tasks or `certbot` renewals) that do not follow our specific bash script contract (`--project`, `--instance`, etc.), trying to force the *entire* crontab into the `schedule.yaml` format will result in errors or corrupted data.
+
+Instead, the safest approach is to take a raw snapshot of the entire crontab exactly as it is. I have replaced the `export` function with a `backup` function that does exactly this. I also wired it into the `sync` command so that **it automatically creates a timestamped backup right before overwriting anything**.
+
+Here is the updated `scheduler.py`:
+
+```python
+#!/usr/bin/env python3
+
+import argparse
 import sys
 import os
 from datetime import datetime
@@ -32,18 +44,19 @@ def validate_script(base_dir: Path, script_name: str) -> Path:
         sys.exit(1)
     return script_path
 
-def backup_crontab(backups_path: Path) -> Path:
+def backup_crontab(backup_dir: Path) -> Path:
     """Saves a raw text backup of the entire user crontab."""
     cron = CronTab(user=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     # Ensure backup directory exists
+    backups_path = backup_dir / "crontab_backups"
     backups_path.mkdir(parents=True, exist_ok=True)
 
     backup_file = backups_path / f"crontab_{timestamp}.bak"
-    content = cron.render()
+
     with open(backup_file, 'w') as f:
-        f.write(content)
+        f.write(cron.render())
 
     print(f"Full crontab safely backed up to: {backup_file}")
     return backup_file
@@ -130,3 +143,63 @@ def sync_jobs(config_path: Path):
 
     cron.write()
     print(f"Successfully synced {success_count} managed job(s) to crontab.")
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="A declarative cron scheduler for Bash scripts via YAML.",
+        formatter_class=argparse.RawTextHelpFormatter
+    )
+
+    # Global arguments
+    parser.add_argument(
+        "-c", "--config",
+        type=str,
+        default="~/Commands/schedule.yaml",
+        help="Path to the schedule.yaml file (default: ~/Commands/schedule.yaml)"
+    )
+
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    # Sync command
+    subparsers.add_parser("sync", help="Backup crontab, read YAML, and apply jobs")
+
+    # Clear command
+    subparsers.add_parser("clear", help="Remove all managed jobs from crontab")
+
+    # Status command
+    subparsers.add_parser("status", help="List all currently managed jobs in crontab")
+
+    # Backup command
+    backup_parser = subparsers.add_parser("backup", help="Manually backup the entire current crontab")
+    backup_parser.add_argument(
+        "-d", "--dir",
+        type=str,
+        default="~/Commands",
+        help="Directory to store the backup (default: ~/Commands)"
+    )
+
+    args = parser.parse_args()
+    config_path = Path(args.config).expanduser()
+
+    if args.command == "sync":
+        sync_jobs(config_path)
+    elif args.command == "clear":
+        clear_jobs()
+    elif args.command == "status":
+        status_jobs()
+    elif args.command == "backup":
+        backup_dir = Path(args.dir).expanduser()
+        backup_crontab(backup_dir)
+
+if __name__ == "__main__":
+    main()
+
+```
+
+### What changed:
+
+1. **No Data Loss**: The script will now take the entire raw crontab and save it to `~/Commands/crontab_backups/crontab_YYYYMMDD_HHMMSS.bak`.
+2. **Automatic Safety**: You no longer have to remember to back up. Running `./scheduler.py sync` automatically fires off the backup function before it touches anything.
+3. **Manual Command**: You can still trigger a manual backup anytime without syncing by running `./scheduler.py backup`. If you ever need to restore, you can just run `crontab ~/Commands/crontab_backups/crontab_YYYYMMDD_HHMMSS.bak` in your terminal.
+
+Would you like me to update your `Makefile` to include a `make backup` target that points to this new function?
