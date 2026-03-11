@@ -1,0 +1,55 @@
+Here is a `Makefile` designed to make interacting with your new scheduler fast and convenient. It includes a command to install the dependencies using `uv` and a handy command to monitor the execution logs.
+
+Save this as `Makefile` in the same `~/Commands/` directory.
+
+```makefile
+# Makefile for YAML Cron Scheduler
+
+# Variables
+SCRIPT = ./scheduler.py
+CONFIG = schedule.yaml
+LOG_FILE = schedule.log
+
+.PHONY: help install sync clear status logs
+
+# Default target when just typing 'make'
+help:
+	@echo "Usage: make [target]"
+	@echo ""
+	@echo "Targets:"
+	@echo "  install   Install required Python dependencies using uv"
+	@echo "  sync      Apply the jobs defined in $(CONFIG) to crontab"
+	@echo "  clear     Remove all managed jobs from crontab"
+	@echo "  status    List all currently managed jobs in crontab"
+	@echo "  logs      Tail the execution log file ($(LOG_FILE))"
+
+install:
+	uv pip install pyyaml python-crontab
+
+sync:
+	$(SCRIPT) --config $(CONFIG) sync
+
+clear:
+	$(SCRIPT) --config $(CONFIG) clear
+
+status:
+	$(SCRIPT) --config $(CONFIG) status
+
+logs:
+	tail -f $(LOG_FILE)
+
+```
+
+### How to use it
+
+From your terminal inside the `~/Commands/` directory, you can now manage your cron system with simple commands:
+
+* **`make install`**: Installs `pyyaml` and `python-crontab` into your current environment.
+* **`make sync`**: Safely updates your crontab with the latest jobs from your YAML file.
+* **`make status`**: Checks which jobs are currently active.
+* **`make logs`**: Streams the output of your `schedule.log` file in real-time so you can watch your jobs execute. Press `Ctrl+C` to exit.
+* **`make clear`**: Wipes the managed jobs from your crontab.
+
+---
+
+Would you like me to draft a sample `schedule.yaml` and a dummy bash script so you can test the `make sync` and `make logs` flow right away?

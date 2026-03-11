@@ -1,0 +1,104 @@
+Here is a sample configuration and a dummy bash script to test the entire pipeline. I have set the first job to run every minute (`* * * * *`) so you don't have to wait long to see the results in your logs.
+
+### 1. The Dummy Bash Script (`dummy_task.sh`)
+
+Save this file as `dummy_task.sh` inside your `~/Commands/` directory. This script simulates the contract we established, parsing the arguments and printing timestamps so you can verify the cron job is executing correctly.
+
+```bash
+#!/bin/bash
+
+# Default fallback values
+project_id="unknown"
+instance_id="unknown"
+uv_path="uv"
+
+# Parse the arguments passed by the scheduler
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --project) project_id="$2"; shift ;;
+        --instance) instance_id="$2"; shift ;;
+        --uv) uv_path="$2"; shift ;;
+        *) echo "Unknown parameter passed: $1"; exit 1 ;;
+    esac
+    shift
+done
+
+# Simulate workload and log output
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] START: Project '$project_id' (Instance: $instance_id)"
+echo "            Using uv environment at: $uv_path"
+echo "            Simulating data processing..."
+sleep 2 # Simulate work
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] END:   Project '$project_id' completed."
+echo "---------------------------------------------------"
+
+```
+
+Don't forget to make it executable:
+
+```bash
+chmod +x ~/Commands/dummy_task.sh
+
+```
+
+### 2. The Sample Configuration (`schedule.yaml`)
+
+Save this as `schedule.yaml` inside your `~/Commands/` directory. It schedules two tasks using the dummy script.
+
+```yaml
+global:
+  uv_path: "~/.cargo/bin/uv" # Adjust this if your uv binary is located elsewhere
+  base_dir: "~/Commands"
+  log_file: "~/Commands/schedule.log"
+
+jobs:
+  - script: "dummy_task.sh"
+    cron: "* * * * *"  # Runs every minute for quick testing
+    project_id: "news_weaver"
+    instance_id: "dev_local"
+
+  - script: "dummy_task.sh"
+    cron: "*/5 * * * *"  # Runs every 5 minutes
+    project_id: "ainews"
+    instance_id: "scraper_node"
+
+```
+
+### 3. Running the Test
+
+Now you can use your `Makefile` to bring it all to life. Run these commands from inside `~/Commands/`:
+
+1. **Sync the jobs to crontab:**
+```bash
+make sync
+
+```
+
+
+*You should see output confirming the jobs were synced.*
+2. **Verify they are in the crontab:**
+```bash
+make status
+
+```
+
+
+3. **Watch the logs:**
+```bash
+make logs
+
+```
+
+
+*Wait up to 60 seconds. You will see the output of `news_weaver` pop into the terminal automatically. You can press `Ctrl+C` to stop watching the log.*
+4. **Clean up (Optional):**
+Once you are done testing, you can remove the dummy jobs so they don't keep running every minute:
+```bash
+make clear
+
+```
+
+
+
+---
+
+Would you like me to outline a strategy for handling error notifications (like sending an alert if a bash script exits with a failure code) next?

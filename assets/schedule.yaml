@@ -1,0 +1,15 @@
+global:
+  uv_path: "~/.local/bin/uv" # Adjust this if your uv binary is located elsewhere
+  base_dir: "~/Commands"
+  log_file: "~/Commands/schedule.log"
+
+jobs:
+  - script: "dummy_task.sh"
+    cron: "* * * * *"  # Runs every minute for quick testing
+    project_id: "news_weaver"
+    instance_id: "dev_local"
+
+  - script: "dummy_task.sh"
+    cron: "*/5 * * * *"  # Runs every 5 minutes
+    project_id: "ainews"
+    instance_id: "scraper_node"

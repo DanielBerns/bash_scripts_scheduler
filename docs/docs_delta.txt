@@ -1,0 +1,78 @@
+Here is the updated `Makefile` that includes an `init` command.
+
+This new target will create the `~/Commands` directory if it does not already exist, copy the specified files from an assets directory, and automatically ensure the bash script has the correct execution permissions.
+
+I have added an `ASSETS_DIR` variable at the top, which defaults to `./assets` but can be easily overridden from the command line.
+
+### Updated `Makefile`
+
+```makefile
+# Makefile for YAML Cron Scheduler
+
+# Variables
+DEST_DIR = ~/Commands
+SCRIPT = ./scheduler.py
+CONFIG = schedule.yaml
+LOG_FILE = schedule.log
+ASSETS_DIR ?= ./assets
+
+.PHONY: help install sync clear status logs init
+
+# Default target when just typing 'make'
+help:
+	@echo "Usage: make [target]"
+	@echo ""
+	@echo "Targets:"
+	@echo "  init      Create $(DEST_DIR), copy dummy_script.sh and schedule.yaml from ASSETS_DIR"
+	@echo "  install   Install required Python dependencies using uv"
+	@echo "  sync      Apply the jobs defined in $(CONFIG) to crontab"
+	@echo "  clear     Remove all managed jobs from crontab"
+	@echo "  status    List all currently managed jobs in crontab"
+	@echo "  logs      Tail the execution log file ($(LOG_FILE))"
+
+init:
+	@echo "Creating $(DEST_DIR) if it does not exist..."
+	mkdir -p $(DEST_DIR)
+	@echo "Copying assets from $(ASSETS_DIR)..."
+	cp $(ASSETS_DIR)/dummy_script.sh $(DEST_DIR)/
+	cp $(ASSETS_DIR)/schedule.yaml $(DEST_DIR)/
+	@echo "Setting execution permissions for the dummy script..."
+	chmod +x $(DEST_DIR)/dummy_script.sh
+	@echo "Initialization complete. You can now run 'make sync' from $(DEST_DIR)."
+
+install:
+	uv pip install pyyaml python-crontab
+
+sync:
+	$(SCRIPT) --config $(CONFIG) sync
+
+clear:
+	$(SCRIPT) --config $(CONFIG) clear
+
+status:
+	$(SCRIPT) --config $(CONFIG) status
+
+logs:
+	tail -f $(LOG_FILE)
+
+```
+
+### How to use the new command
+
+If your assets are in a folder named `assets` in your current directory, you can simply run:
+
+```bash
+make init
+
+```
+
+If your assets are stored somewhere else, you can pass the custom path dynamically without changing the Makefile:
+
+```bash
+make init ASSETS_DIR=/path/to/your/custom/assets
+
+```
+
+---
+
+Would you like me to outline a strategy for handling error notifications, such as sending a desktop alert or appending to an error-specific log if a bash script exits with a failure code?
