@@ -1,5 +1,5 @@
 global:
-  uv_path: "~/.local/bin/uv" # Adjust this if your uv binary is located elsewhere. which uv
+  uv_command: "~/.local/bin/uv" # Adjust this if your uv binary is located elsewhere. which uv
   base_dir: "~/Commands"
   log_file: "~/Commands/schedule.log"
 

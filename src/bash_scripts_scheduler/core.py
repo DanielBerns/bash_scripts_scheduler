@@ -82,7 +82,7 @@ def sync_jobs(config_path: Path):
 
     # Resolve paths, expanding user tilde (~)
     base_dir = Path(global_cfg.get('base_dir', '~/Commands')).expanduser()
-    uv_path = Path(global_cfg.get('uv_path', '~/.cargo/bin/uv')).expanduser()
+    uv_command = Path(global_cfg.get('uv_command', '~/.cargo/bin/uv')).expanduser()
     log_file = Path(global_cfg.get('log_file', '~/Commands/schedule.log')).expanduser()
 
     # Access user crontab
@@ -113,7 +113,7 @@ def sync_jobs(config_path: Path):
             f"{script_path} "
             f"--project {project_id} "
             f"--instance {instance_id} "
-            f"--uv {uv_path} "
+            f"--uv {uv_command} "
             f">> {log_file} 2>&1"
         )
 

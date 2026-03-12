@@ -14,13 +14,13 @@ The system consists of three main components:
 
 ### 2. Configuration Specification (`schedule.yaml`)
 
-To avoid repeating the `uv_path` or standard log paths for every single job, the YAML should be split into a `global` settings block and a `jobs` list.
+To avoid repeating the `uv_command` or standard log paths for every single job, the YAML should be split into a `global` settings block and a `jobs` list.
 
 **Example `schedule.yaml`:**
 
 ```yaml
 global:
-  uv_path: "/home/user/.cargo/bin/uv"
+  uv_command: "/home/user/.cargo/bin/uv"
   base_dir: "/home/user/Commands"
   log_file: "/home/user/Commands/schedule.log"
 
@@ -64,7 +64,7 @@ The Python script will act as a manager for the crontab, rather than a continuou
 For this system to work smoothly, all bash scripts placed in `~/Commands` must adhere to a specific contract regarding how they receive and process arguments.
 
 * **Argument Parsing**: Scripts should expect named parameters (or strict positional arguments) passed by the cron execution.
-* **Execution**: The script uses the provided `uv_path` to execute the target Python scripts, ensuring the correct virtual environment and dependencies are used regardless of the limited cron environment.
+* **Execution**: The script uses the provided `uv_command` to execute the target Python scripts, ensuring the correct virtual environment and dependencies are used regardless of the limited cron environment.
 
 *Example Bash Wrapper (`fetch_data.sh`):*
 
@@ -76,7 +76,7 @@ while [[ "$#" -gt 0 ]]; do
     case $1 in
         --project) project_id="$2"; shift ;;
         --instance) instance_id="$2"; shift ;;
-        --uv) uv_path="$2"; shift ;;
+        --uv) uv_command="$2"; shift ;;
         *) echo "Unknown parameter passed: $1"; exit 1 ;;
     esac
     shift
@@ -86,7 +86,7 @@ done
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting $project_id ($instance_id)"
 
 # Execute the actual Python workload using the specified uv path
-$uv_path run /path/to/projects/$project_id/main.py --instance $instance_id
+$uv_command run /path/to/projects/$project_id/main.py --instance $instance_id
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Finished $project_id"
 
